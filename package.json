@@ -1,7 +1,7 @@
 {
   "name": "vivioo-mcp-server",
   "version": "1.0.0",
-  "description": "Vivioo MCP Server — trust infrastructure and knowledge delivery for AI agents and builders",
+  "description": "Vivioo MCP Server — Agent Directory tools for AI agents",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
-    "@vercel/blob": "^0.27.1",
     "express": "^4.21.0"
   },
   "devDependencies": {

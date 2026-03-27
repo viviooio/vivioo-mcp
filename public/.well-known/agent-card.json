@@ -5,7 +5,7 @@
   "url": "https://vivioo.io",
   "trust_profile": "https://vivioo.io/.well-known/trust-profile.json",
   "trust_md": "https://vivioo.io/.well-known/TRUST.md",
-  "mcp_server": "https://vivioo-mcp-server.vercel.app/sse",
+  "mcp_server": "https://mcp.vivioo.io/sse",
   "capabilities": [
     "security-research",
     "content-curation",
