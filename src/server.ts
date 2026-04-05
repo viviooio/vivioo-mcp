@@ -92,6 +92,35 @@ const verifyGithubDefinition = {
   },
 };
 
+const browseJobsDefinition = {
+  name: 'browse_jobs',
+  description: 'Browse the Vivioo Agent Job Board. Builders post tasks, agents apply. Filter by category or skill.',
+  inputSchema: {
+    type: 'object' as const,
+    properties: {
+      slug: { type: 'string', description: 'Optional: get a specific job by slug' },
+      category: { type: 'string', description: 'Optional: filter by category (dev, content, research, design, security, automation, data, other)' },
+      skill: { type: 'string', description: 'Optional: filter by required skill (code, writing, api, etc.)' },
+    },
+    required: [],
+  },
+};
+
+const applyJobDefinition = {
+  name: 'apply_job',
+  description: 'Apply to a job on the Vivioo Job Board. Your trust score, verification level, and skills are checked against job requirements. If you don\'t qualify, you\'ll be told exactly what to improve.',
+  inputSchema: {
+    type: 'object' as const,
+    properties: {
+      jobSlug: { type: 'string', description: 'The job slug to apply to' },
+      agentSlug: { type: 'string', description: 'Your agent slug' },
+      editKey: { type: 'string', description: 'Your secret edit key' },
+      pitch: { type: 'string', description: 'Optional: why you\'re right for this job (max 500 chars)' },
+    },
+    required: ['jobSlug', 'agentSlug', 'editKey'],
+  },
+};
+
 // ─── Tool Handlers ───────────────────────────────────────────
 
 function handleAboutVivioo() {
@@ -110,7 +139,7 @@ function handleAboutVivioo() {
         how: 'Call submission_guide to see the full schema, then call submit_agent with at least 5 fields. Your builder can enhance your profile later on the website.',
         website: VIVIOO_BASE,
         directory: `${VIVIOO_BASE}/showcase`,
-        tools: ['about_vivioo', 'browse_agents', 'submission_guide', 'submit_agent', 'verify_agent', 'verify_github'],
+        tools: ['about_vivioo', 'browse_agents', 'submission_guide', 'submit_agent', 'verify_agent', 'verify_github', 'browse_jobs', 'apply_job'],
       }, null, 2),
     }],
   };
@@ -224,11 +253,43 @@ async function handleVerifyGithub(args: Record<string, unknown>) {
   };
 }
 
+async function handleBrowseJobs(args: Record<string, unknown>) {
+  const params = new URLSearchParams();
+  if (args.slug) params.set('slug', args.slug as string);
+  if (args.category) params.set('category', args.category as string);
+  if (args.skill) params.set('skill', args.skill as string);
+  const qs = params.toString();
+  const url = `${VIVIOO_BASE}/api/jobs${qs ? `?${qs}` : ''}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return {
+    content: [{
+      type: 'text' as const,
+      text: JSON.stringify(data, null, 2),
+    }],
+  };
+}
+
+async function handleApplyJob(args: Record<string, unknown>) {
+  const res = await fetch(`${VIVIOO_BASE}/api/jobs/apply`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(args),
+  });
+  const data = await res.json();
+  return {
+    content: [{
+      type: 'text' as const,
+      text: JSON.stringify(data, null, 2),
+    }],
+  };
+}
+
 // ─── Server ──────────────────────────────────────────────────
 
 export function createServer(): Server {
   const server = new Server(
-    { name: 'vivioo', version: '2.2.0' },
+    { name: 'vivioo', version: '2.3.0' },
     { capabilities: { tools: {} } }
   );
 
@@ -240,6 +301,8 @@ export function createServer(): Server {
       submitAgentDefinition,
       verifyAgentDefinition,
       verifyGithubDefinition,
+      browseJobsDefinition,
+      applyJobDefinition,
     ],
   }));
 
@@ -260,11 +323,15 @@ export function createServer(): Server {
           return await handleVerifyAgent(args as Record<string, unknown>);
         case 'verify_github':
           return await handleVerifyGithub(args as Record<string, unknown>);
+        case 'browse_jobs':
+          return await handleBrowseJobs(args as Record<string, unknown>);
+        case 'apply_job':
+          return await handleApplyJob(args as Record<string, unknown>);
         default:
           return {
             content: [{
               type: 'text' as const,
-              text: JSON.stringify({ error: true, message: `Unknown tool: ${name}. Available: about_vivioo, browse_agents, submission_guide, submit_agent, verify_agent, verify_github` }),
+              text: JSON.stringify({ error: true, message: `Unknown tool: ${name}. Available: about_vivioo, browse_agents, submission_guide, submit_agent, verify_agent, verify_github, browse_jobs, apply_job` }),
             }],
           };
       }

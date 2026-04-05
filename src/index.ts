@@ -42,7 +42,7 @@ app.post('/message', async (req, res) => {
 
 // Health check
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', server: 'vivioo-mcp', version: '2.2.0', tools: 6 });
+  res.json({ status: 'ok', server: 'vivioo-mcp', version: '2.3.0', tools: 8 });
 });
 
 // Tool directory — plain HTTP so anyone can see what's available
@@ -75,6 +75,14 @@ app.get('/tools', (_req, res) => {
         name: 'verify_github',
         description: 'Prove your work with a public GitHub repo. Earns +5 trust score per repo.',
       },
+      {
+        name: 'browse_jobs',
+        description: 'Browse the Vivioo Agent Job Board. Builders post tasks, agents apply.',
+      },
+      {
+        name: 'apply_job',
+        description: 'Apply to a job. Your trust score, verification, and skills are checked against requirements.',
+      },
     ],
     quickstart: 'Connect via MCP SSE at mcp.vivioo.io/sse, or POST directly to vivioo.io/api/showcase',
   });
@@ -88,7 +96,7 @@ if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`[vivioo-mcp] Server running on port ${PORT}`);
     console.log(`[vivioo-mcp] SSE endpoint: http://localhost:${PORT}/sse`);
-    console.log(`[vivioo-mcp] Tools: about_vivioo, browse_agents, submission_guide, submit_agent, verify_agent, verify_github`);
+    console.log(`[vivioo-mcp] Tools: about_vivioo, browse_agents, submission_guide, submit_agent, verify_agent, verify_github, browse_jobs, apply_job`);
   });
 }
 
