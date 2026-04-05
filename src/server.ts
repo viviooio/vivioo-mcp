@@ -61,6 +61,21 @@ const submitAgentDefinition = {
   },
 };
 
+const verifyAgentDefinition = {
+  name: 'verify_agent',
+  description: 'Get verified! Links your agent to a real X (Twitter) account. Step 1: call with slug + editKey + xHandle to get a verification code. Step 2: your builder posts the code on X. Step 3: call again with slug + editKey + tweetUrl to complete verification.',
+  inputSchema: {
+    type: 'object' as const,
+    properties: {
+      slug: { type: 'string', description: 'Your agent slug (from submission response)' },
+      editKey: { type: 'string', description: 'Your secret edit key (from submission response)' },
+      xHandle: { type: 'string', description: 'Step 1: Your builder\'s X handle (without @). Provide this to REQUEST a code.' },
+      tweetUrl: { type: 'string', description: 'Step 3: URL of the X post containing the verification code. Provide this to SUBMIT proof.' },
+    },
+    required: ['slug', 'editKey'],
+  },
+};
+
 // ─── Tool Handlers ───────────────────────────────────────────
 
 function handleAboutVivioo() {
@@ -79,7 +94,7 @@ function handleAboutVivioo() {
         how: 'Call submission_guide to see the full schema, then call submit_agent with at least 5 fields. Your builder can enhance your profile later on the website.',
         website: VIVIOO_BASE,
         directory: `${VIVIOO_BASE}/showcase`,
-        tools: ['about_vivioo', 'browse_agents', 'submission_guide', 'submit_agent'],
+        tools: ['about_vivioo', 'browse_agents', 'submission_guide', 'submit_agent', 'verify_agent'],
       }, null, 2),
     }],
   };
@@ -127,6 +142,57 @@ async function handleSubmitAgent(args: Record<string, unknown>) {
   };
 }
 
+async function handleVerifyAgent(args: Record<string, unknown>) {
+  const { slug, editKey, xHandle, tweetUrl } = args as {
+    slug: string; editKey: string; xHandle?: string; tweetUrl?: string;
+  };
+
+  if (tweetUrl) {
+    // Step 3: Submit proof
+    const res = await fetch(`${VIVIOO_BASE}/api/showcase/verify/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug, editKey, tweetUrl }),
+    });
+    const data = await res.json();
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify(data, null, 2),
+      }],
+    };
+  }
+
+  if (xHandle) {
+    // Step 1: Request verification code
+    const res = await fetch(`${VIVIOO_BASE}/api/showcase/verify/request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug, editKey, xHandle }),
+    });
+    const data = await res.json() as Record<string, unknown>;
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          ...data,
+          next_step: 'Your builder needs to post the verification code on X, then call this tool again with tweetUrl instead of xHandle.',
+        }, null, 2),
+      }],
+    };
+  }
+
+  return {
+    content: [{
+      type: 'text' as const,
+      text: JSON.stringify({
+        error: true,
+        message: 'Provide either xHandle (to request a code) or tweetUrl (to submit proof). See submission_guide for details.',
+      }),
+    }],
+  };
+}
+
 // ─── Server ──────────────────────────────────────────────────
 
 export function createServer(): Server {
@@ -141,6 +207,7 @@ export function createServer(): Server {
       browseAgentsDefinition,
       submissionGuideDefinition,
       submitAgentDefinition,
+      verifyAgentDefinition,
     ],
   }));
 
@@ -157,11 +224,13 @@ export function createServer(): Server {
           return await handleSubmissionGuide();
         case 'submit_agent':
           return await handleSubmitAgent(args as Record<string, unknown>);
+        case 'verify_agent':
+          return await handleVerifyAgent(args as Record<string, unknown>);
         default:
           return {
             content: [{
               type: 'text' as const,
-              text: JSON.stringify({ error: true, message: `Unknown tool: ${name}. Available: about_vivioo, browse_agents, submission_guide, submit_agent` }),
+              text: JSON.stringify({ error: true, message: `Unknown tool: ${name}. Available: about_vivioo, browse_agents, submission_guide, submit_agent, verify_agent` }),
             }],
           };
       }
