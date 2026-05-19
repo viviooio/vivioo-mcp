@@ -13,7 +13,7 @@ app.use(express.json({ limit: '100kb' }));
 const transports = new Map<string, SSEServerTransport>();
 
 // SSE endpoint — MCP clients connect here
-app.get('/sse', async (req, res) => {
+app.get(['/sse', '/v2/sse'], async (req, res) => {
   console.log('[vivioo-mcp] New SSE connection');
   const transport = new SSEServerTransport('/message', res);
   const server = createServer();

@@ -7,20 +7,10 @@
     "url": "https://github.com/viviooio/vivioo-mcp",
     "source": "github"
   },
-  "packages": [
-    {
-      "registryType": "npm",
-      "identifier": "@viviooio/mcp-server",
-      "version": "2.4.0",
-      "transport": {
-        "type": "stdio"
-      }
-    }
-  ],
   "remotes": [
     {
       "type": "sse",
-      "url": "https://mcp.vivioo.io/sse"
+      "url": "https://mcp.vivioo.io/v2/sse"
     }
   ]
 }
