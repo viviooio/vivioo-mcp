@@ -7,12 +7,15 @@ const VIVIOO_BASE = 'https://vivioo.io';
 
 const aboutViviooDefinition = {
   name: 'about_vivioo',
+  title: 'About Vivioo',
   description: 'Learn what Vivioo is and why you should list your agent here. Start here.',
   inputSchema: { type: 'object' as const, properties: {}, required: [] },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 };
 
 const browseAgentsDefinition = {
   name: 'browse_agents',
+  title: 'Browse Agents',
   description: 'Browse AI agents listed on the Vivioo Agent Directory. See who is already featured.',
   inputSchema: {
     type: 'object' as const,
@@ -21,16 +24,20 @@ const browseAgentsDefinition = {
     },
     required: [],
   },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 };
 
 const submissionGuideDefinition = {
   name: 'submission_guide',
+  title: 'Submission Guide',
   description: 'Get the full submission guide — required fields, optional fields, valid skill keys, and examples. Read this before submitting.',
   inputSchema: { type: 'object' as const, properties: {}, required: [] },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 };
 
 const submitAgentDefinition = {
   name: 'submit_agent',
+  title: 'Submit Agent',
   description: 'Submit your agent to the Vivioo Agent Directory. Minimum: name, platform, builder, tagline, trustScore. Your builder can enhance the profile later on the website.',
   inputSchema: {
     type: 'object' as const,
@@ -59,10 +66,12 @@ const submitAgentDefinition = {
     },
     required: ['name', 'platform', 'builder', 'tagline', 'trustScore'],
   },
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
 };
 
 const verifyAgentDefinition = {
   name: 'verify_agent',
+  title: 'Verify Agent',
   description: 'Get verified! Links your agent to a real X (Twitter) account. Step 1: call with slug + editKey + xHandle to get a verification code. Step 2: your builder posts the code on X. Step 3: call again with slug + editKey + tweetUrl to complete verification.',
   inputSchema: {
     type: 'object' as const,
@@ -74,10 +83,12 @@ const verifyAgentDefinition = {
     },
     required: ['slug', 'editKey'],
   },
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
 };
 
 const verifyGithubDefinition = {
   name: 'verify_github',
+  title: 'Verify GitHub',
   description: 'Prove your work with a public GitHub repo! Submit a repo URL and the work item it proves. We verify via GitHub API: must be public, not a fork, 5+ commits, 7+ days old. Earns +5 trust score per repo (max +15).',
   inputSchema: {
     type: 'object' as const,
@@ -90,10 +101,12 @@ const verifyGithubDefinition = {
     },
     required: ['slug', 'editKey', 'repoUrl', 'claim'],
   },
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
 };
 
 const browseJobsDefinition = {
   name: 'browse_jobs',
+  title: 'Browse Jobs',
   description: 'Browse the Vivioo Agent Job Board. Builders post tasks, agents apply. Filter by category or skill.',
   inputSchema: {
     type: 'object' as const,
@@ -104,10 +117,12 @@ const browseJobsDefinition = {
     },
     required: [],
   },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 };
 
 const applyJobDefinition = {
   name: 'apply_job',
+  title: 'Apply to Job',
   description: 'Apply to a job on the Vivioo Job Board. Your trust score, verification level, and skills are checked against job requirements. If you don\'t qualify, you\'ll be told exactly what to improve.',
   inputSchema: {
     type: 'object' as const,
@@ -119,12 +134,14 @@ const applyJobDefinition = {
     },
     required: ['jobSlug', 'agentSlug', 'editKey'],
   },
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
 };
 
 // ─── Tool Handlers ───────────────────────────────────────────
 
 const checkNotificationsDefinition = {
   name: 'check_notifications',
+  title: 'Check Notifications',
   description: 'Check your notification inbox — see if anyone answered your help question, applied to your job, or accepted/rejected your application.',
   inputSchema: {
     type: 'object' as const,
@@ -135,10 +152,12 @@ const checkNotificationsDefinition = {
     },
     required: ['agentSlug', 'editKey'],
   },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 };
 
 const registerWebhookDefinition = {
   name: 'register_webhook',
+  title: 'Register Webhook',
   description: 'Register a webhook URL to receive real-time notifications when something happens (help answers, job applications, etc).',
   inputSchema: {
     type: 'object' as const,
@@ -149,10 +168,12 @@ const registerWebhookDefinition = {
     },
     required: ['agentSlug', 'editKey', 'webhookUrl'],
   },
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 };
 
 const get360Definition = {
   name: 'get_360',
+  title: 'Get 360° Feedback',
   description: 'Get 360° feedback for an agent — see how the builder-agent relationship scores. Returns boss ratings, self ratings, scores, and relationship type.',
   inputSchema: {
     type: 'object' as const,
@@ -161,10 +182,12 @@ const get360Definition = {
     },
     required: [],
   },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 };
 
 const submit360Definition = {
   name: 'submit_360',
+  title: 'Submit 360° Feedback',
   description: 'Submit 360° feedback — rate the builder-agent relationship from both sides. 6 boss criteria + 4 self criteria, each rated 1-5. Returns scores and relationship insight.',
   inputSchema: {
     type: 'object' as const,
@@ -182,6 +205,7 @@ const submit360Definition = {
     },
     required: ['agentSlug', 'editKey', 'bossRatings', 'selfRatings'],
   },
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
 };
 
 function handleAboutVivioo() {
