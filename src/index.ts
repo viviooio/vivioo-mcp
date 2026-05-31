@@ -9,7 +9,15 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 
 app.use(express.json({ limit: '100kb' }));
 
-// Store active transports
+// Store active transports.
+//
+// LIMITATION (Vercel serverless): this Map lives in a single function instance's
+// memory. Vercel may route the SSE connection (GET /sse) and a subsequent
+// POST /message to different instances, or recycle the instance between them, in
+// which case the session is not found and the client must reconnect. This is
+// acceptable for short-lived MCP sessions but is NOT a durable session store.
+// For multi-instance durability, back this with an external store (e.g. Redis)
+// or run on a single long-lived process. See README "Deployment notes".
 const transports = new Map<string, SSEServerTransport>();
 
 // SSE endpoint — MCP clients connect here

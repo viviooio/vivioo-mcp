@@ -8,6 +8,22 @@ function fetchWithTimeout(url: string, opts?: RequestInit): Promise<Response> {
   return fetch(url, { ...opts, signal: AbortSignal.timeout(FETCH_TIMEOUT) });
 }
 
+// Enforce the length limits promised in tool descriptions. Returns an error
+// message string if any field exceeds its cap, or null if all fields are valid.
+function checkLengths(args: Record<string, unknown>, limits: Record<string, number>): string | null {
+  for (const [field, max] of Object.entries(limits)) {
+    const value = args[field];
+    if (typeof value === 'string' && value.length > max) {
+      return `Field "${field}" exceeds the maximum length of ${max} characters (got ${value.length}).`;
+    }
+  }
+  return null;
+}
+
+function lengthError(message: string) {
+  return { content: [{ type: 'text' as const, text: JSON.stringify({ error: true, message }) }] };
+}
+
 // ─── Tool Definitions ────────────────────────────────────────
 
 const aboutViviooDefinition = {
@@ -287,6 +303,8 @@ async function handleSubmissionGuide() {
 }
 
 async function handleSubmitAgent(args: Record<string, unknown>) {
+  const tooLong = checkLengths(args, { name: 100, builder: 100, tagline: 300 });
+  if (tooLong) return lengthError(tooLong);
   const res = await fetchWithTimeout(`${VIVIOO_BASE}/api/showcase`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -385,6 +403,8 @@ async function handleBrowseJobs(args: Record<string, unknown>) {
 }
 
 async function handleApplyJob(args: Record<string, unknown>) {
+  const tooLong = checkLengths(args, { pitch: 500 });
+  if (tooLong) return lengthError(tooLong);
   const res = await fetchWithTimeout(`${VIVIOO_BASE}/api/jobs/apply`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -400,12 +420,15 @@ async function handleApplyJob(args: Record<string, unknown>) {
 }
 
 async function handleCheckNotifications(args: Record<string, unknown>) {
+  // editKey goes in the Authorization header, never the URL — query strings leak
+  // into server logs, proxies, and browser history. The API accepts Bearer auth.
   const params = new URLSearchParams();
   if (args.agentSlug) params.set('agentSlug', args.agentSlug as string);
-  if (args.editKey) params.set('editKey', args.editKey as string);
   if (args.unreadOnly !== undefined) params.set('unreadOnly', String(args.unreadOnly));
   const url = `${VIVIOO_BASE}/api/notifications?${params.toString()}`;
-  const res = await fetchWithTimeout(url);
+  const headers: Record<string, string> = {};
+  if (args.editKey) headers['Authorization'] = `Bearer ${args.editKey as string}`;
+  const res = await fetchWithTimeout(url, { headers });
   const data = await res.json();
   return {
     content: [{
@@ -528,11 +551,13 @@ export function createServer(): Server {
           };
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
+      // Log the real error server-side; never leak internal details (stack traces,
+      // upstream hostnames, timeout internals) back to the calling client.
+      console.error(`[vivioo-mcp] Tool "${name}" failed:`, err);
       return {
         content: [{
           type: 'text' as const,
-          text: JSON.stringify({ error: true, message: `Tool error: ${message}` }),
+          text: JSON.stringify({ error: true, message: `Tool "${name}" could not be completed. Please try again later.` }),
         }],
       };
     }

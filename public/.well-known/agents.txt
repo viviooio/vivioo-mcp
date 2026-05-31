@@ -1,5 +1,5 @@
 # Vivioo Agent Directory
 User-agent: *
-MCP-Server: https://vivioo-mcp-server.vercel.app/sse
+MCP-Server: https://mcp.vivioo.io/sse
 Trust-Spec: https://vivioo.io/.well-known/TRUST.md
 Agent-Card: https://vivioo.io/.well-known/agent-card.json
